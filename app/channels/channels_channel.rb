@@ -1,8 +1,8 @@
 class ChannelsChannel < ApplicationCable::Channel
 
     def receive(data)
-
-        message = Message.create(content: data["content"], channel_id: data["channelId"], user_id: data["userId"])
+        message = current_user.messages.create(content: data["content"], channel_id: data["channelId"])
+        puts current_user.id
         channel = Channel.find(message.channel_id)
         ChannelsChannel.broadcast_to(channel, message.as_json(include: :user))
     end

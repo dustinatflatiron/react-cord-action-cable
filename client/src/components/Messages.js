@@ -36,15 +36,15 @@ function Messages(props) {
         // is an object structured like this: { message: "some message" }
         received: (data) => {
           setMessages((prevMessages) => {
-            return Array.isArray(data) ? [...data] : [data, ...prevMessages];
+            return Array.isArray(data) ? data : [data, ...prevMessages];
           });
         },
         connected: () => console.log("connected"),
         disconnected: () => console.log("disconnected"),
       }
     );
-    // return () => channelsChannel.current.unsubscribe();
-  }, []);
+    return () => channelsChannel.current.unsubscribe();
+  }, [cableContext, channelId]);
 
   function handleSubmit(e) {
     e.preventDefault();
