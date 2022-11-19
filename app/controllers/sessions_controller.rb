@@ -3,6 +3,7 @@ class SessionsController < ApplicationController
     user = User.find_by(username: params[:username])
     if user&.authenticate(params[:password])
       session[:user_id] = user.id
+      cookies.signed[:id] = user.id
       session[:channel_id] = nil
       render json: user, status: :created
     else

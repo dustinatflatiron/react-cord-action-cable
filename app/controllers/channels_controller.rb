@@ -16,6 +16,17 @@ class ChannelsController < ApplicationController
     render json: channels
   end
 
+  def show 
+    channel = Channel.find_by(id: params[:id])
+    render json: channel.as_json(
+      include: {
+        messages: {
+          include: :user
+        }
+      }
+    )
+  end
+
   def destroy
     user_id = session[:user_id]
     channel = Channel.find(params[:channel_id])

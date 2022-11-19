@@ -29,8 +29,6 @@ function Dashboard() {
       ) : (
         <div>
           <Logout />
-          {/*<MessageBox />*/}
-          <Link to={"/new-channel"}>New Channel</Link>
           <ChannelMenu />
         </div>
       )}

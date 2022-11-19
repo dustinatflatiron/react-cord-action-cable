@@ -1,46 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { ListGroup, ListGroupItem } from "reactstrap";
-import ActionCable from "actioncable";
+import React, { useEffect, useState, useRef, useContext } from "react";
+import { useParams } from "react-router-dom";
+import { CardBody, ListGroup, ListGroupItem } from "reactstrap";
+import { CableContext } from "../context/cable.js";
+import { UserContext } from "../context/user";
 
 function Messages(props) {
-  const channelId = props.channelId;
+  const [user, setUser] = useContext(UserContext);
+  const cableContext = useContext(CableContext);
+  const { id: channelId } = useParams();
+
+  const [content, setContent] = useState("");
   const [messages, setMessages] = useState([]);
-  const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
-  const createSubscription = () => {
-    cable.subscriptions.create(
-      { channel: "MessagesChannel" },
+
+  const channelsChannel = useRef(null);
+
+  //   useEffect(() => {
+  //     const getMessages = async () => {
+  //       console.log("here");
+  //       const res = await fetch(`/channels/${channelId}`);
+  //       const data = await res.json();
+  //       setMessages(data.messages);
+  //     };
+
+  //     getMessages();
+  //   }, [channelId]);
+
+  useEffect(() => {
+    channelsChannel.current = cableContext.cable.subscriptions.create(
       {
-        connected: () => console.log("Connected"),
-        disconnected: () => console.log("Disconnected"),
-        received: (data) => console.log(data),
+        channel: `ChannelsChannel`,
+        id: channelId,
+      },
+      {
+        // remember, the data being received and passed to the received callback
+        // is an object structured like this: { message: "some message" }
+        received: (data) => {
+          setMessages((prevMessages) => {
+            return Array.isArray(data) ? [...data] : [data, ...prevMessages];
+          });
+        },
+        connected: () => console.log("connected"),
+        disconnected: () => console.log("disconnected"),
       }
     );
-  };
-  useEffect(() => {
-    createSubscription();
+    // return () => channelsChannel.current.unsubscribe();
   }, []);
-  useEffect(() => {
-    console.log("This in Messages is called");
-    props.messagesChannel.received = (data) => console.log(data);
-  }, []);
-  useEffect(() => {
-    fetch(`/channels/${channelId}/messages`, {
-      method: "GET",
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        setMessages(response);
-      });
-  }, []);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    // if (content !== "") {
+    //   setContent("");
+    //   fetch("/messages", {
+    //     method: "POST",
+    //     headers: {
+    //       "content-type": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       content: content,
+    //       channel_id: channelId,
+    //     }),
+    //   });
+    // }
+    channelsChannel.current.send({ content, channelId, userId: user.id });
+    setContent("");
+  }
+
   return (
-    <ListGroup>
-      {messages !== [] &&
-        messages.map((message, index) => (
+    <div>
+      <div>
+        <textarea
+          rows={10}
+          placeholder={"Enter a message here ..."}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        ></textarea>
+        <button onClick={(e) => handleSubmit(e)}>Send!</button>
+      </div>
+      <ListGroup>
+        {messages.map((message, index) => (
           <ListGroupItem key={index}>
             {message.user.username} : {message.content}
           </ListGroupItem>
         ))}
-    </ListGroup>
+      </ListGroup>
+    </div>
   );
 }
 

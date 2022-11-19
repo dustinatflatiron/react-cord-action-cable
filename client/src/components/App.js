@@ -1,6 +1,7 @@
 import "../App.css";
-import { Switch } from "react-router-dom";
+import { Switch, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
+import Messages from "./Messages";
 
 function App() {
   return (
